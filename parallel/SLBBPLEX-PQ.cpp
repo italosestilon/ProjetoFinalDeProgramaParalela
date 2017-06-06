@@ -496,14 +496,10 @@ void thread_master(){
 	pq.push(make_pair(0, c));
 
 	pthread_t* thread_handles = (pthread_t*)malloc(sizeof(pthread_t)*4);
-	for(long i = 0; i < 4; i++){
-    	pthread_create(&thread_handles[i], NULL, thread_m, (void*) i);
-  	}
-
-	for(int j = 0; j < 4 ; j++){
-		pthread_join(thread_handles[j], NULL);
-	}
-
+	
+	pthread_create(&thread_handles[i], NULL, thread_m, (void*) i);
+  	
+	pthread_join(thread_handles[j], NULL);
 }
 
 
