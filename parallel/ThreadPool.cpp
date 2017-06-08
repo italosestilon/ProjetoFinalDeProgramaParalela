@@ -7,7 +7,10 @@
 #include "ThreadPool.h"
 
 bool task::operator< (const task  &c) const {
-    return a < c.a;
+    if(level == c.level){
+        return COUNT(U, W) < COUNT(c.U, c.W);
+    }
+    return level < c.level;
 }
 
 ThreadPool::ThreadPool(int thread_number, function<vector<task>(task)> problem) {
@@ -19,7 +22,7 @@ ThreadPool::ThreadPool(int thread_number, function<vector<task>(task)> problem) 
 void ThreadPool::enqueue(task call) {
     std::unique_lock<std::mutex> lock(mutex_queue);
     //cout << "colocando " << call.a << " na fila" << "\n";
-    pq.push(make_pair(call.a, call));
+    pq.push(make_pair(call.level, call));
 
     this->condition.notify_one();
 }

@@ -7,6 +7,7 @@
 #include <pthread.h>
 #include <functional>
 #include <thread>
+#include "bitmap.h"
 #include <condition_variable>
 
 #ifndef POOLTHREAD_THREADPOOL_H
@@ -15,7 +16,8 @@
 
 class task{
 public:
-    int a;
+    word * U;
+    int W, level, * nncnt, * set;
 
     bool operator<(const task &) const;
 };
