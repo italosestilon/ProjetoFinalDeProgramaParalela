@@ -6,7 +6,7 @@
 #include <iostream>
 #include <pthread.h>
 #include "bitmap.h"
-#include <queue>
+#include <vector>
 #include <stdlib.h>
 
 #define MAX_VERTEX 20000
@@ -43,9 +43,6 @@ bool call::operator< (const call  &c) const {
 }
 
 pthread_mutex_t mutex_update_solution = PTHREAD_MUTEX_INITIALIZER;
-pthread_mutex_t mutex_queue = PTHREAD_MUTEX_INITIALIZER;
-
-priority_queue < pair < int, call>, vector< pair < int, call> > > pq;
 
 void make_saturated_list(int * set, int size, word * U, int W, int * nncnt, int * saturated_vertex, int & saturated_size){
 	int u = set[size-1];
@@ -341,7 +338,8 @@ void branching(word * U, int W, int bound){
 }
 
 
-void thread_slave(call c){
+vector<call> thread_slave(call c){
+	vector<call> calls;
 	int iv, jv;
 	int iu, ju;
 	word R[NWORDS(Vnbr)];
@@ -351,6 +349,27 @@ void thread_slave(call c){
 	int * nncnt = c.nncnt;
 	int * set = c.set;
 	word * U = c.U;
+
+	if(level + COUNT(U, W) <= record){
+		free(c.set);
+		free(c.U);
+		free(c.nncnt);
+		return calls;
+	}
+
+	pthread_mutex_lock(&mutex_update_solution);
+	//Verificando se uma solução melhor foi encontrada
+	if(COUNT(U, W) == 0 && level > record){
+		record = level;
+		if(!isPlex3(level, set)){
+			printf("Oh, wait! The set isn't a k-plex\n");
+			exit(0);
+		}
+		for(int i = 0; i < level; i++) rec[i] = set[i];
+		printf("improving solution size %d\n", record);
+	}
+
+	pthread_mutex_unlock(&mutex_update_solution);
 
 	for(int k = 0; k <= W; k++){
 		R[k] = U[k];
@@ -387,7 +406,7 @@ void thread_slave(call c){
 		
 
 		if(c2.level + COUNT(c2.U, c2.W) > record){
-			pq.push(make_pair(c2.level, c2));
+			calls.push_back(c2);
 		}else{
 			free(c2.set);
 			free(c2.U);
@@ -398,6 +417,8 @@ void thread_slave(call c){
 	free(c.U);
 	free(c.set);
 	free(c.nncnt);
+
+	return calls;
 }
 
 
@@ -421,29 +442,6 @@ void* thread_m(void *param){
 		int * set = c.set;
 		int * nncnt = c.nncnt;
 		word * U = c.U;
-
-		
-		if(level + COUNT(U, W) <= record){
-			free(c.set);
-			free(c.U);
-			free(c.nncnt);
-			continue;
-		}
-
-		pthread_mutex_lock(&mutex_update_solution);
-		//Verificando se uma solução melhor foi encontrada
-		if(COUNT(U, W) == 0 && level > record){
-			record = level;
-			if(!isPlex3(level, set)){
-				printf("Oh, wait! The set isn't a k-plex\n");
-				exit(0);
-			}
-			for(int i = 0; i < level; i++) rec[i] = set[i];
-			printf("improving solution size %d\n", record);
-		}
-
-		subp++;
-		pthread_mutex_unlock(&mutex_update_solution);
 
 
 		//Verificando timeout
@@ -494,12 +492,6 @@ void thread_master(){
 	}
 
 	pq.push(make_pair(0, c));
-
-	pthread_t* thread_handles = (pthread_t*)malloc(sizeof(pthread_t)*4);
-	
-	pthread_create(&thread_handles[i], NULL, thread_m, (void*) i);
-  	
-	pthread_join(thread_handles[j], NULL);
 }
 
 
