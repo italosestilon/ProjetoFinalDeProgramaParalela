@@ -6,6 +6,7 @@
 #include <iostream>
 #include <pthread.h>
 #include "bitmap.h"
+#include "ThreadPool.h"
 #include <vector>
 #include <stdlib.h>
 
@@ -28,19 +29,6 @@ int timeout;
 double elapsed;
 int s = 2;
 int cnt = 0;
-
-struct call{
-	word * U; 
-	int W, level, * nncnt, * set;
-	bool operator< (const call  &) const;
-};
-
-bool call::operator< (const call  &c) const {
-	if(level == c.level){
-		return COUNT(U, W) < COUNT(c.U, c.W);
-	}
-	return level < c.level;
-}
 
 pthread_mutex_t mutex_update_solution = PTHREAD_MUTEX_INITIALIZER;
 
@@ -271,7 +259,7 @@ void degree_order(){
 				p = i;
 			}
 		}
-		
+
 		pos[count--] = p;
 		used[p] = true;
 		for(int j=0;j<Vnbr;j++){
@@ -338,14 +326,14 @@ void branching(word * U, int W, int bound){
 }
 
 
-vector<call> thread_slave(call c){
-	vector<call> calls;
+vector<task> thread_slave(task c){
+	vector<task> tasks;
 	int iv, jv;
 	int iu, ju;
 	word R[NWORDS(Vnbr)];
 
-	int W = c.W; 
-	int level = c.level; 
+	int W = c.W;
+	int level = c.level;
 	int * nncnt = c.nncnt;
 	int * set = c.set;
 	word * U = c.U;
@@ -354,11 +342,10 @@ vector<call> thread_slave(call c){
 		free(c.set);
 		free(c.U);
 		free(c.nncnt);
-		return calls;
+		return tasks;
 	}
 
 	pthread_mutex_lock(&mutex_update_solution);
-	//Verificando se uma solução melhor foi encontrada
 	if(COUNT(U, W) == 0 && level > record){
 		record = level;
 		if(!isPlex3(level, set)){
@@ -368,7 +355,6 @@ vector<call> thread_slave(call c){
 		for(int i = 0; i < level; i++) rec[i] = set[i];
 		printf("improving solution size %d\n", record);
 	}
-
 	pthread_mutex_unlock(&mutex_update_solution);
 
 	for(int k = 0; k <= W; k++){
@@ -383,8 +369,8 @@ vector<call> thread_slave(call c){
 
 	while(jv >= 0){
 		int v = indexbit(iv, jv);
-		
-		call c2;
+
+		task c2;
 		c2.W = W;
 		c2.level = level+1;
 		c2.set = (int*)malloc(sizeof(int)*Vnbr);
@@ -403,10 +389,10 @@ vector<call> thread_slave(call c){
 		ju = LSB(U, iu, W);
 
 		generate(U, W, c2.level, c2.U, c2.nncnt, c2.set);
-		
+
 
 		if(c2.level + COUNT(c2.U, c2.W) > record){
-			calls.push_back(c2);
+			tasks.push_back(c2);
 		}else{
 			free(c2.set);
 			free(c2.U);
@@ -418,16 +404,16 @@ vector<call> thread_slave(call c){
 	free(c.set);
 	free(c.nncnt);
 
-	return calls;
+	return tasks;
 }
 
 
-void* thread_m(void *param){
+/*void* thread_m(void *param){
 	cout << "thead" <<  endl;
 
 	while(1){
-		pair<int, call> p;
-		call c;
+		pair<int, task> p;
+		task c;
 		pthread_mutex_lock(&mutex_queue);
 		if(!pq.empty()){
 			p = pq.top(); pq.pop();
@@ -436,9 +422,9 @@ void* thread_m(void *param){
 			break;
 		}
 		pthread_mutex_unlock(&mutex_queue);
-		 
-		int W = c.W; 
-		int level = c.level;  
+
+		int W = c.W;
+		int level = c.level;
 		int * set = c.set;
 		int * nncnt = c.nncnt;
 		word * U = c.U;
@@ -468,14 +454,14 @@ void* thread_m(void *param){
 	}
 	cout << "acabando" <<  endl;
 	return NULL;
-}
+}*/
 
 void thread_master(){
 
-	call c;
+	task c;
 	c.U = (word*)malloc(sizeof(word)*NWORDS(Vnbr));
-	c.nncnt = (int*)malloc(sizeof(int)*Vnbr);	
-	c.set = (int*)malloc(sizeof(int)*Vnbr);	
+	c.nncnt = (int*)malloc(sizeof(int)*Vnbr);
+	c.set = (int*)malloc(sizeof(int)*Vnbr);
 	c.W = high(Vnbr);
 	c.level = 0;
 
@@ -491,7 +477,9 @@ void thread_master(){
 		c.nncnt[i] = 0;
 	}
 
-	pq.push(make_pair(0, c));
+	ThreadPool tp(4, thread_slave);
+	tp.enqueue(c);
+	tp.run();
 }
 
 
@@ -541,14 +529,14 @@ int main(int argc, char *argv[]){
 			pbit[i][k] = 0LL;
 		}
 
-		for(int j = 0; j < Vnbr; j++){	
+		for(int j = 0; j < Vnbr; j++){
 			if( test( bit[pos[i]], pos[j] ) ){
 				setbit( pbit[i], j);
 			}
 		}
 	}
 
-	
+
   	subp  = 0LL;
   	printf("start search\n");
 

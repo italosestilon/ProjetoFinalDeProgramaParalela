@@ -14,7 +14,7 @@ bool task::operator< (const task  &c) const {
 }
 
 ThreadPool::ThreadPool(int thread_number, function<vector<task>(task)> problem) {
-    cout << "fila esta " << pq.empty() << endl;
+    //cout << "fila esta " << pq.empty() << endl;
     this->threadNumber = thread_number;
     this->problem = problem;
 }
@@ -51,10 +51,10 @@ void ThreadPool::run() {
         thread_handles.push_back(thread(
                 [this, i]
                 {
-                    cout << "criando thread " << i << endl;
+                    //cout << "criando thread " << i << endl;
                     for(;;)
                     {
-                        cout << "thread " << i << " ficando desocupada" << endl;
+                        //cout << "thread " << i << " ficando desocupada" << endl;
                         this->busy[i] = false;
                         task* g = nullptr;
                         {
@@ -69,7 +69,7 @@ void ThreadPool::run() {
                             g = this->getTask();
                         }
                         vector<task> calls = this->problem(*g);
-                        cout << "t " << i << " enfileirando " << calls.size() << " elementos" << endl;
+                        //cout << "t " << i << " enfileirando " << calls.size() << " elementos" << endl;
                         for(task c : calls){
                             this->enqueue(c);
                         }
@@ -94,7 +94,7 @@ void ThreadPool::run() {
 }
 
 ThreadPool::~ThreadPool() {
-    cout << "tentando parar" << endl;
+    //cout << "tentando parar" << endl;
     {
         std::unique_lock<std::mutex> lock(mutex_queue);
         this->stop = true;
@@ -104,4 +104,3 @@ ThreadPool::~ThreadPool() {
     for(std::thread &worker: thread_handles)
         worker.join();
 }
-
