@@ -69,6 +69,7 @@ void ThreadPool::run() {
                             g = this->getTask();
                         }
                         vector<task> calls = this->problem(*g);
+                        delete g;
                         //cout << "t " << i << " enfileirando " << calls.size() << " elementos" << endl;
                         for(task c : calls){
                             this->enqueue(c);
@@ -89,7 +90,8 @@ void ThreadPool::run() {
 
                         }
                     }
-                }));
+                })
+          );
     }
 }
 

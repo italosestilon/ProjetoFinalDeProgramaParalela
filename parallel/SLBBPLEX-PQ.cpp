@@ -397,12 +397,14 @@ vector<task> thread_slave(task c){
 			free(c2.set);
 			free(c2.U);
 			free(c2.nncnt);
+			//delete c2;
 		}
 	}
 
 	free(c.U);
 	free(c.set);
 	free(c.nncnt);
+	//delete c;
 
 	return tasks;
 }
@@ -478,8 +480,8 @@ void thread_master(){
 	}
 
 	ThreadPool tp(4, thread_slave);
-	tp.enqueue(c);
 	tp.run();
+	tp.enqueue(c);
 }
 
 
