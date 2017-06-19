@@ -26,6 +26,7 @@ int level;
 long long int subp;
 clock_t clk;
 int timeout;
+int nt;
 double elapsed;
 int s = 2;
 int cnt = 0;
@@ -483,7 +484,7 @@ void thread_master(){
 		c.nncnt[i] = 0;
 	}
 
-	ThreadPool tp(4, thread_slave);
+	ThreadPool tp(nt, thread_slave);
 	tp.run();
 	tp.enqueue(c);
 }
@@ -495,15 +496,15 @@ int main(int argc, char *argv[]){
 
   	/* read input */
   	if(argc < 3) {
-		printf("Usage: BB timeout k infile\n");
+		printf("Usage: BB nt k infile\n");
 		printf("k: k-plex size\n");
 		printf("infile: input file path\n");
 		exit(1);
   	}
 
-  	timeout = atoi( argv[1] );
+  	nt = atoi( argv[1] );
 
-  	printf("timeout %d s\n", timeout );
+  	printf("nt %d\n", nt );
 
   	if((infile=fopen(argv[3],"r"))==NULL){
 		printf("Error in graph file\n %s\n", argv[2]);
