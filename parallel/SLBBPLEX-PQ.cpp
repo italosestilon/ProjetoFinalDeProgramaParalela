@@ -345,17 +345,21 @@ vector<task> thread_slave(task c){
 		return tasks;
 	}
 
-	pthread_mutex_lock(&mutex_update_solution);
-	if(COUNT(U, W) == 0 && level > record){
-		record = level;
-		if(!isPlex3(level, set)){
-			printf("Oh, wait! The set isn't a k-plex\n");
-			exit(0);
+	if(COUNT(U, W) == 0){
+	
+		pthread_mutex_lock(&mutex_update_solution);
+		if(level > record){
+			record = level;
+			if(!isPlex3(level, set)){
+				printf("Oh, wait! The set isn't a k-plex\n");
+				exit(0);
+			}
+			for(int i = 0; i < level; i++) rec[i] = set[i];
+			printf("improving solution size %d\n", record);
 		}
-		for(int i = 0; i < level; i++) rec[i] = set[i];
-		printf("improving solution size %d\n", record);
+		pthread_mutex_unlock(&mutex_update_solution);
 	}
-	pthread_mutex_unlock(&mutex_update_solution);
+	
 
 	for(int k = 0; k <= W; k++){
 		R[k] = U[k];
@@ -397,12 +401,14 @@ vector<task> thread_slave(task c){
 			free(c2.set);
 			free(c2.U);
 			free(c2.nncnt);
+			//delete c2;
 		}
 	}
 
 	free(c.U);
 	free(c.set);
 	free(c.nncnt);
+	//delete c;
 
 	return tasks;
 }

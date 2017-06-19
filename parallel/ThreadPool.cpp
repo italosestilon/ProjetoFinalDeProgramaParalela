@@ -111,7 +111,8 @@ void ThreadPool::run() {
 
                         }
                     }
-                }));
+                })
+          );
     }
 }
 
