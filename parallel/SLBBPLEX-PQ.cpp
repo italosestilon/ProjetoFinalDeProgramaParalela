@@ -478,8 +478,8 @@ void thread_master(){
 	}
 
 	ThreadPool tp(4, thread_slave);
-	tp.enqueue(c);
 	tp.run();
+	tp.enqueue(c);
 }
 
 
