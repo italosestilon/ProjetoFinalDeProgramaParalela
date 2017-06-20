@@ -340,6 +340,7 @@ void branching(word * U, int W, int bound){
 
 void thread_slave(task c){
 	double duracao;
+	struct timeval stop;
 	int iv, jv;
 	int iu, ju;
 	word R[NWORDS(Vnbr)];
@@ -379,6 +380,7 @@ void thread_slave(task c){
 
 
 	if(duracao >= timeout){
+		pthread_mutex_lock(&mutex_update_solution);
 		printf("TIMEOUT\n");
 		printf("best %d-plex: ", s);
 		for(int i = 0; i < record; i++){
@@ -389,6 +391,7 @@ void thread_slave(task c){
 	  	//printf("subp            =  %10lld\n", subp );
 		printf("time            =  %10.5f\n", duracao );
     		exit(0);
+		pthread_mutex_unlock(&mutex_update_solution);
 	}
 
 	for(int k = 0; k <= W; k++){
