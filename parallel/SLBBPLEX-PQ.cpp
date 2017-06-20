@@ -429,7 +429,7 @@ void thread_slave(task c){
       uniform_int_distribution<int> distribution(1,10);
       int dice_roll = distribution(generator);
 
-      if(dice_roll >= 6){
+      if(dice_roll >= 8){
         thread_slave(c2);
       }else{
         tp->enqueue(c2);
@@ -513,7 +513,7 @@ void thread_master(){
 		generate(U, W, c2.level, c2.U, c2.nncnt, c2.set);
 		tp->enqueue(c2);
 	}
-  
+
   tp->~ThreadPool();
 }
 
