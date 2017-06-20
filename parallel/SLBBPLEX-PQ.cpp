@@ -28,6 +28,17 @@ int nt;
 double elapsed;
 int s = 2;
 int cnt = 0;
+double duracao;
+struct timeval start, stop;
+
+double rtclock(){
+    struct timezone Tzp;
+    struct timeval Tp;
+    int stat;
+    stat = gettimeofday (&Tp, &Tzp);
+    if (stat != 0) printf("Error return from gettimeofday: %d",stat);
+    return(Tp.tv_sec + Tp.tv_usec*1.0e-6);
+}
 
 pthread_mutex_t mutex_update_solution = PTHREAD_MUTEX_INITIALIZER;
 
@@ -360,6 +371,24 @@ vector<task> thread_slave(task c){
 	}
 	
 
+	/*gettimeofday(&stop, NULL);
+
+	duracao = ((double) (stop.tv_sec * 1000000 + stop.tv_usec) - (start.tv_sec * 1000000 + start.tv_usec)) / 1000000;
+
+	if(duracao >= timeout){
+		printf("TIMEOUT\n");
+		printf("best %d-plex: ", s);
+		for(int i = 0; i < record; i++){
+			printf("%d ", pos[rec[i]] + 1);
+		}
+
+		printf("\n");
+		printf("record          =  %10d\n", record );
+	  	//printf("subp            =  %10lld\n", subp );
+		printf("time            =  %10.5f\n", duracao );
+		//tp.~ThreadPool();
+	}*/
+
 	for(int k = 0; k <= W; k++){
 		R[k] = U[k];
 	}
@@ -442,31 +471,31 @@ void thread_master(){
 
 int main(int argc, char *argv[]){
 	FILE *infile;
-	
-	double duracao;
-	struct timeval start, end;
 
   	/* read input */
-  	if(argc < 3) {
-		printf("Usage: BB nt k infile\n");
+  	if(argc < 4) {
+		printf("Usage: BB timeout nt k infile\n");
 		printf("k: k-plex size\n");
 		printf("infile: input file path\n");
 		exit(1);
   	}
 
-  	nt = atoi( argv[1] );
+	timeout = atoi( argv[1] );
+
+	printf("timout %d\n", timeout);
+
+  	nt = atoi( argv[2] );
 
   	printf("nt %d\n", nt );
 
-  	if((infile=fopen(argv[3],"r"))==NULL){
-		printf("Error in graph file\n %s\n", argv[2]);
+  	if((infile=fopen(argv[4],"r"))==NULL){
+		printf("Error in graph file\n %s\n", argv[4]);
 		exit(0);
   	}
 
 
-	if(argv[3]){
-		s = atoi(argv[2]);
-	}
+
+	s = atoi(argv[3]);
 
   	/* read graph */
   	readFile(infile, Vnbr, Enbr);
@@ -501,9 +530,9 @@ int main(int argc, char *argv[]){
 
 	thread_master();
 
-	gettimeofday(&end, NULL);
+	gettimeofday(&stop, NULL);
 
-	duracao = ((double) (end.tv_sec * 1000000 + end.tv_usec) - (start.tv_sec * 1000000 + start.tv_usec)) / 1000000;
+	duracao = ((double) (stop.tv_sec * 1000000 + stop.tv_usec) - (start.tv_sec * 1000000 + start.tv_usec)) / 1000000;
 
 	printf("best %d-plex: ", s);
 	for(int i = 0; i < record; i++){
