@@ -84,7 +84,7 @@ void ThreadPool::run() {
                         g = this->getTask();
                         
                         if(g){
-                            calls = this->problem(*g);
+                            this->problem(*g);
                             delete g;
                             //cout << "t " << i << " enfileirando " << calls.size() << " elementos" << endl;
                         }
