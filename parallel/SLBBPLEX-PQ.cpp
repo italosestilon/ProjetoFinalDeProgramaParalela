@@ -123,7 +123,6 @@ void generate(word * U, int W, int level, word * newU, int * nncnt, int * set){
 	}
 }
 
-
 bool isPlex3(int level, int * set){
     word C[NWORDS(Vnbr)];
 
@@ -373,7 +372,7 @@ void thread_slave(task c){
 	}
 
 
-	/*gettimeofday(&stop, NULL);
+	gettimeofday(&stop, NULL);
 
 	duracao = ((double) (stop.tv_sec * 1000000 + stop.tv_usec) - (start.tv_sec * 1000000 + start.tv_usec)) / 1000000;
 
@@ -388,8 +387,8 @@ void thread_slave(task c){
 		printf("record          =  %10d\n", record );
 	  	//printf("subp            =  %10lld\n", subp );
 		printf("time            =  %10.5f\n", duracao );
-		//tp.~ThreadPool();
-	}*/
+    exit(0);
+	}
 
 	for(int k = 0; k <= W; k++){
 		R[k] = U[k];
@@ -424,17 +423,21 @@ void thread_slave(task c){
 
 		generate(U, W, c2.level, c2.U, c2.nncnt, c2.set);
 
-    if(level + COUNT(c2.U, c2.W) >= record){
+    if(level + COUNT(c2.U, c2.W) > record){
       int seed = chrono::system_clock::now().time_since_epoch().count();
       default_random_engine generator (seed);
       uniform_int_distribution<int> distribution(1,10);
       int dice_roll = distribution(generator);
 
-      if(dice_roll >= 6)
+      if(dice_roll >= 6){
         thread_slave(c2);
-      else{
+      }else{
         tp->enqueue(c2);
       }
+    }else{
+      free(c2.set);
+  		free(c2.U);
+  		free(c2.nncnt);
     }
 	}
 
@@ -510,6 +513,8 @@ void thread_master(){
 		generate(U, W, c2.level, c2.U, c2.nncnt, c2.set);
 		tp->enqueue(c2);
 	}
+  
+  tp->~ThreadPool();
 }
 
 

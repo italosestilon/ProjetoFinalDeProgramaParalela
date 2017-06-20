@@ -23,7 +23,7 @@ ThreadPool::ThreadPool(int thread_number, function<void (task)> problem) {
 void ThreadPool::enqueue(task call) {
     {
         std::unique_lock<std::mutex> lock(mutex_queue);
-        //cout << "colocando " << call.a << " na fila" << "\n";
+        //cout << "colocando na fila" << "\n";
         pq.push(make_pair(call.level, call));
     }
 
@@ -45,7 +45,7 @@ task* ThreadPool::getTask() {
             c = nullptr;
         }
     }
-  
+
     return c;
 }
 
@@ -66,14 +66,14 @@ void ThreadPool::run() {
                             unique_lock<mutex> lock(this->mutex_queue);
                             //cout << "thread " << i << " ficando ocupada" << endl;
                             this->condition.wait(lock,
-                                                 [this, i] { 
+                                                 [this, i] {
                                                     //cout << "avaliando a thread " << i << endl;
                                                     return this->stop || !this->pq.empty(); });
                             if (this->stop && this->pq.empty()){
                                 cout << "thread " << i << " parando" << endl;
                                 return;
                             }
-               
+
                         }
 
                         {
@@ -82,7 +82,7 @@ void ThreadPool::run() {
                         }
 
                         g = this->getTask();
-                        
+
                         if(g){
                             this->problem(*g);
                             delete g;
@@ -99,10 +99,10 @@ void ThreadPool::run() {
                             std::unique_lock<std::mutex> lock(mutex_queue);
                             //cout << "ocupadas " << this->busyThreads << " tamanho da fila " <<  pq.size() << endl;
                             if(this->busyThreads==0) {
-                                
+
                                 this->stop = true;
                                 this->condition.notify_all();
-                                
+
                             }
 
                         }
@@ -113,7 +113,7 @@ void ThreadPool::run() {
 }
 
 ThreadPool::~ThreadPool() {
-    
+
     for(std::thread &worker: thread_handles){
         worker.join();
     }
