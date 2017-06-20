@@ -8,12 +8,12 @@
 
 bool task::operator< (const task  &c) const {
     if(level == c.level){
-        return COUNT(U, W) < COUNT(c.U, c.W);
+        return (-1)*COUNT(U, W) < (-1)*COUNT(c.U, c.W);
     }
-    return level < c.level;
+    return level*(-1) < (-1)*c.level;
 }
 
-ThreadPool::ThreadPool(int thread_number, function<vector<task>(task)> problem) {
+ThreadPool::ThreadPool(int thread_number, function<void (task)> problem) {
     //cout << "fila esta " << pq.empty() << endl;
     this->stop = false;
     this->threadNumber = thread_number;
@@ -65,11 +65,8 @@ void ThreadPool::run() {
                         {
                             unique_lock<mutex> lock(this->mutex_queue);
                             //cout << "thread " << i << " ficando ocupada" << endl;
-                            this->condition.wait(lock,
-                                                 [this, i] { 
-                                                    //cout << "avaliando a thread " << i << endl;
-                                                    return this->stop || !this->pq.empty(); });
-                            if (this->stop && this->pq.empty()){
+            
+                            if (this->pq.empty()){
                             	cout << "thread " << i << " parando" << endl;
                                 return;
                             }
@@ -77,39 +74,13 @@ void ThreadPool::run() {
                
                         }
 
-                        {
-                        	unique_lock<mutex> lock(this->mutex_queue);
-                        	this->busyThreads++;
-                        }
-
                         g = this->getTask();
-                        vector<task> calls;
+                        
                         if(g){
-	                        calls = this->problem(*g);
+	                        this->problem(*g);
 	                        delete g;
 	                        //cout << "t " << i << " enfileirando " << calls.size() << " elementos" << endl;
-	                        for(task c : calls){
-	                            this->enqueue(c);
-	                        }
-                    	}
-
-                        {
-                        	unique_lock<mutex> lock(this->mutex_queue);
-                        	this->busyThreads--;
-                    	}
-
-                        if(calls.empty()){
-                        	//cout << "possivelmente parar " << endl;
-                        	std::unique_lock<std::mutex> lock(mutex_queue);
-                          	//cout << "ocupadas " << this->busyThreads << " tamanho da fila " <<  pq.size() << endl;
-                            if(this->busyThreads==0) {
-                                if(pq.empty()){
-                                    this->stop = true;
-                                    this->condition.notify_all();
-                                }
-                            }
-
-                        }
+                    	}                        
                     }
                 })
           );
@@ -117,7 +88,8 @@ void ThreadPool::run() {
 }
 
 ThreadPool::~ThreadPool() {
-    
+    this->condition.notify_all();
+    cout << "tentando parar as threads" << endl;
     for(std::thread &worker: thread_handles){
         worker.join();
     }

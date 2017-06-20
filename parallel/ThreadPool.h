@@ -10,6 +10,7 @@
 #include <thread>
 #include "bitmap.h"
 #include <condition_variable>
+#include "fibonacci.hpp"
 
 #ifndef POOLTHREAD_THREADPOOL_H
 #define POOLTHREAD_THREADPOOL_H
@@ -28,11 +29,11 @@ using namespace std;
 class ThreadPool {
 
 private:
-    stack < pair< int, task>, vector< pair < int, task> > > pq;
+    FibonacciHeap< pair< int, task> > pq;
     vector<thread> thread_handles;
     condition_variable condition;
     vector<bool> busy;
-    function<vector<task>(task)> problem;
+    function<void (task)> problem;
     int threadNumber;
 
     mutex mutex_queue;
@@ -42,7 +43,7 @@ private:
 
 public:
 
-    ThreadPool(int thread_number, std::function<vector<task>(task)> problem);
+    ThreadPool(int thread_number, std::function<void (task)> problem);
     ~ThreadPool();
     void run();
     task* getTask();

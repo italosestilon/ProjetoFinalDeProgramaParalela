@@ -336,8 +336,7 @@ void branching(word * U, int W, int bound){
 }
 
 
-vector<task> thread_slave(task c){
-	vector<task> tasks;
+void thread_slave(task c){
 	int iv, jv;
 	int iu, ju;
 	word R[NWORDS(Vnbr)];
@@ -352,7 +351,7 @@ vector<task> thread_slave(task c){
 		free(c.set);
 		free(c.U);
 		free(c.nncnt);
-		return tasks;
+		return;
 	}
 
 	if(COUNT(U, W) == 0){
@@ -422,15 +421,12 @@ vector<task> thread_slave(task c){
 
 		generate(U, W, c2.level, c2.U, c2.nncnt, c2.set);
 
+		int seed = chrono::system_clock::now().time_since_epoch().count();
+        default_random_engine generator (seed);
+        uniform_int_distribution<int> distribution(1,10);
+        int dice_roll = distribution(generator);
 
-		if(c2.level + COUNT(c2.U, c2.W) > record){
-			tasks.push_back(c2);
-		}else{
-			free(c2.set);
-			free(c2.U);
-			free(c2.nncnt);
-			//delete c2;
-		}
+		thread_slave(c2);
 	}
 
 	free(c.U);
@@ -438,7 +434,6 @@ vector<task> thread_slave(task c){
 	free(c.nncnt);
 	//delete c;
 
-	return tasks;
 }
 
 void thread_master(){
@@ -449,6 +444,12 @@ void thread_master(){
 	c.set = (int*)malloc(sizeof(int)*Vnbr);
 	c.W = high(Vnbr);
 	c.level = 0;
+
+	int W = c.W;
+	int level = c.level;
+	int * nncnt = c.nncnt;
+	int * set = c.set;
+	word * U = c.U;
 
   	for(int k = 0; k < NWORDS(Vnbr); k++){
   		c.U[k] = 0LL;
@@ -464,7 +465,45 @@ void thread_master(){
 
 	ThreadPool tp(nt, thread_slave);
 	tp.run();
-	tp.enqueue(c);
+
+	int iv, jv;
+	int iu, ju;
+	word R[NWORDS(Vnbr)];
+
+	for(int k = 0; k <= W; k++){
+		R[k] = U[k];
+	}
+
+	branching(R, W, record - level);
+	iv = 0;
+	jv = LSB(R, iv, W);
+	iu = 0;
+	ju = LSB(U, iu, W);
+
+	while(jv >= 0){
+		int v = indexbit(iv, jv);
+
+		task c2;
+		c2.W = W;
+		c2.level = level+1;
+		c2.set = (int*)malloc(sizeof(int)*Vnbr);
+		c2.U = (word*)malloc(sizeof(word)*NWORDS(Vnbr));
+		c2.nncnt = (int*)malloc(sizeof(int)*Vnbr);
+
+		for(int i=0; i<Vnbr; i++){
+			c2.set[i] = set[i];
+			c2.nncnt[i] = nncnt[i];
+		}
+
+		c2.set[level] = v;
+		resetbit(R, v);
+		resetbit(U, v);
+		jv = LSB(R, iv, W);
+		ju = LSB(U, iu, W);
+
+		generate(U, W, c2.level, c2.U, c2.nncnt, c2.set);
+		tp.enqueue(c2);
+	}
 }
 
 
