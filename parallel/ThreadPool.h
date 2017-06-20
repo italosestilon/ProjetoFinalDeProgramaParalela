@@ -48,6 +48,7 @@ public:
     void run();
     task* getTask();
     void enqueue(task call);
+    int nBusy();
 };
 
 

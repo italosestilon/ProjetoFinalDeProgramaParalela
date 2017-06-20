@@ -112,6 +112,17 @@ void ThreadPool::run() {
     }
 }
 
+int ThreadPool::nBusy(){
+
+    int nbusy;
+    {
+        unique_lock<mutex> lock(this->mutex_queue);
+        nbusy = this->busyThreads;
+    }
+
+    return nbusy;
+}
+
 ThreadPool::~ThreadPool() {
 
     for(std::thread &worker: thread_handles){
