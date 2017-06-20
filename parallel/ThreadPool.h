@@ -4,6 +4,7 @@
 
 #include <vector>
 #include <queue>
+#include <stack>
 #include <pthread.h>
 #include <functional>
 #include <thread>
@@ -27,7 +28,7 @@ using namespace std;
 class ThreadPool {
 
 private:
-    priority_queue < pair< int, task>, vector< pair < int, task> > > pq;
+    stack < pair< int, task>, vector< pair < int, task> > > pq;
     vector<thread> thread_handles;
     condition_variable condition;
     vector<bool> busy;

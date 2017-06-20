@@ -95,7 +95,7 @@ void ThreadPool::run() {
                         this->busy[i] = false;
 
                         if(calls.empty()){
-                        	//cout << "possivelmente parar " << endl;
+                        	cout << "possivelmente parar " << endl;
                         	std::unique_lock<std::mutex> lock(mutex_queue);
                             bool flag = false;
 
