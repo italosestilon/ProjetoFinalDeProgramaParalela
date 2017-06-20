@@ -352,7 +352,7 @@ void basicPlexBranching(word * U, int W, int level, int * nncnt){
 
 			printf("\n");
 		  	printf("record          =  %10d\n", record );
-		  	printf("subp            =  %10lld\n", subp );
+		  	//printf("subp            =  %10lld\n", subp );
 		  	printf("time            =  %10.5f\n", elapsed );
 			exit(0);
 		}
@@ -473,7 +473,7 @@ int main(int argc, char *argv[]){
 
 	printf("\n");
   	printf("record          =  %10d\n", record );
-  	printf("subp            =  %10lld\n", subp );
+  	//printf("subp            =  %10lld\n", subp );
   	printf("time            =  %10.5f\n", elapsed );
 
 	return 0;

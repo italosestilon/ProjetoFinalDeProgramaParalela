@@ -1,14 +1,13 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include <time.h>
+#include <sys/time.h>
 #include <pthread.h>
 #include <iostream>
 #include <pthread.h>
 #include "bitmap.h"
 #include "ThreadPool.h"
 #include <vector>
-#include <stdlib.h>
 
 #define MAX_VERTEX 20000
 
@@ -23,7 +22,6 @@ int rec[MAX_VERTEX];
 int record;
 word mask[INT_SIZE];
 int level;
-long long int subp;
 clock_t clk;
 int timeout;
 int nt;
@@ -414,55 +412,6 @@ vector<task> thread_slave(task c){
 	return tasks;
 }
 
-
-/*void* thread_m(void *param){
-	cout << "thead" <<  endl;
-
-	while(1){
-		pair<int, task> p;
-		task c;
-		pthread_mutex_lock(&mutex_queue);
-		if(!pq.empty()){
-			p = pq.top(); pq.pop();
-			c = p.second;
-		}else{
-			break;
-		}
-		pthread_mutex_unlock(&mutex_queue);
-
-		int W = c.W;
-		int level = c.level;
-		int * set = c.set;
-		int * nncnt = c.nncnt;
-		word * U = c.U;
-
-
-		//Verificando timeout
-		if(++cnt > 1000) {
-			cnt = 0;
-			elapsed = ((double) (clock() - clk)) / CLOCKS_PER_SEC;
-			if(elapsed >= timeout) {
-				printf("TIMEOUT\n");
-				printf("best %d-plex: ", s);
-				for(int i = 0; i < record; i++){
-					printf("%d ", pos[rec[i]] + 1);
-				}
-
-				printf("\n");
-			  	printf("record          =  %10d\n", record );
-			  	printf("subp            =  %10lld\n", subp );
-			  	printf("time            =  %10.5f\n", elapsed );
-				exit(0);
-			}
-
-		}
-
-		thread_slave(c);
-	}
-	cout << "acabando" <<  endl;
-	return NULL;
-}*/
-
 void thread_master(){
 
 	task c;
@@ -493,6 +442,9 @@ void thread_master(){
 
 int main(int argc, char *argv[]){
 	FILE *infile;
+	
+	double duracao;
+	struct timeval start, end;
 
   	/* read input */
   	if(argc < 3) {
@@ -520,7 +472,7 @@ int main(int argc, char *argv[]){
   	readFile(infile, Vnbr, Enbr);
 
   	/* "start clock" */
-  	clk = clock();
+  	gettimeofday(&start, NULL);
 
 	mask[0] = 1LL;
 	for(int i=1;i<INT_SIZE;i++){
@@ -544,12 +496,14 @@ int main(int argc, char *argv[]){
 	}
 
 
-  	subp  = 0LL;
+  	//subp  = 0LL;
   	printf("start search\n");
 
 	thread_master();
 
-  	elapsed = ((double) (clock() - clk)) / CLOCKS_PER_SEC;
+	gettimeofday(&end, NULL);
+
+	duracao = ((double) (end.tv_sec * 1000000 + end.tv_usec) - (start.tv_sec * 1000000 + start.tv_usec)) / 1000000;
 
 	printf("best %d-plex: ", s);
 	for(int i = 0; i < record; i++){
@@ -558,8 +512,7 @@ int main(int argc, char *argv[]){
 
 	printf("\n");
   	printf("record          =  %10d\n", record );
-  	printf("subp            =  %10lld\n", subp );
-  	printf("time            =  %10.5f\n", elapsed );
+  	printf("time            =  %10.5lf\n", duracao );
 
 	return 0;
 }
