@@ -1,0 +1,12 @@
+timeout 3600 s
+Graph with 200 vertices and 12048 edges density 0.605427
+start search
+improving solution size 13
+improving solution size 14
+improving solution size 15
+improving solution size 16
+improving solution size 17
+best 2-plex: 20 47 59 147 128 120 46 86 85 181 108 110 107 187 189 143 106 
+record          =          17
+subp            =           0
+time            =   335.63203

@@ -8,6 +8,7 @@
 #include "bitmap.h"
 #include "ThreadPool.h"
 #include <vector>
+#include <random>
 
 #define MAX_VERTEX 20000
 
@@ -30,6 +31,8 @@ int s = 2;
 int cnt = 0;
 double duracao;
 struct timeval start, stop;
+
+ThreadPool *tp;
 
 double rtclock(){
     struct timezone Tzp;
@@ -355,7 +358,7 @@ void thread_slave(task c){
 	}
 
 	if(COUNT(U, W) == 0){
-	
+
 		pthread_mutex_lock(&mutex_update_solution);
 		if(level > record){
 			record = level;
@@ -368,7 +371,7 @@ void thread_slave(task c){
 		}
 		pthread_mutex_unlock(&mutex_update_solution);
 	}
-	
+
 
 	/*gettimeofday(&stop, NULL);
 
@@ -421,23 +424,27 @@ void thread_slave(task c){
 
 		generate(U, W, c2.level, c2.U, c2.nncnt, c2.set);
 
-		int seed = chrono::system_clock::now().time_since_epoch().count();
-        default_random_engine generator (seed);
-        uniform_int_distribution<int> distribution(1,10);
-        int dice_roll = distribution(generator);
+    if(level + COUNT(c2.U, c2.W) >= record){
+      int seed = chrono::system_clock::now().time_since_epoch().count();
+      default_random_engine generator (seed);
+      uniform_int_distribution<int> distribution(1,10);
+      int dice_roll = distribution(generator);
 
-		thread_slave(c2);
+      if(dice_roll >= 6)
+        thread_slave(c2);
+      else{
+        tp->enqueue(c2);
+      }
+    }
 	}
 
 	free(c.U);
 	free(c.set);
 	free(c.nncnt);
-	//delete c;
-
 }
 
 void thread_master(){
-
+  tp = new ThreadPool(nt, thread_slave);
 	task c;
 	c.U = (word*)malloc(sizeof(word)*NWORDS(Vnbr));
 	c.nncnt = (int*)malloc(sizeof(int)*Vnbr);
@@ -463,8 +470,7 @@ void thread_master(){
 		c.nncnt[i] = 0;
 	}
 
-	ThreadPool tp(nt, thread_slave);
-	tp.run();
+	tp->run();
 
 	int iv, jv;
 	int iu, ju;
@@ -502,7 +508,7 @@ void thread_master(){
 		ju = LSB(U, iu, W);
 
 		generate(U, W, c2.level, c2.U, c2.nncnt, c2.set);
-		tp.enqueue(c2);
+		tp->enqueue(c2);
 	}
 }
 
