@@ -27,7 +27,7 @@ void ThreadPool::enqueue(task call) {
 	    pq.push(make_pair(call.level, call));
 	}
 
-    this->condition.notify_all();
+    this->condition.notify_one();
 }
 
 task* ThreadPool::getTask() {
@@ -56,7 +56,7 @@ void ThreadPool::run() {
         thread_handles.push_back(thread(
                 [this, i]
                 {
-                    //cout << "criando thread " << i << endl;
+                    cout << "criando thread " << i << endl;
                     for(;;)
                     {
                         //cout << "thread " << i << " ficando desocupada" << endl;
@@ -70,7 +70,7 @@ void ThreadPool::run() {
                                                     //cout << "avaliando a thread " << i << endl;
                                                     return this->stop || !this->pq.empty(); });
                             if (this->stop && this->pq.empty()){
-                            	//cout << "thread " << i << " parando" << endl;
+                            	cout << "thread " << i << " parando" << endl;
                                 return;
                             }
 
@@ -79,30 +79,30 @@ void ThreadPool::run() {
 
                         {
                         	unique_lock<mutex> lock(this->mutex_queue);
-                        	this->busy[i] = true;
+                        	this->busyThreads++;
                         }
 
                         g = this->getTask();
+                        vector<task> calls;
+                        if(g){
+	                        calls = this->problem(*g);
+	                        delete g;
+	                        //cout << "t " << i << " enfileirando " << calls.size() << " elementos" << endl;
+	                        for(task c : calls){
+	                            this->enqueue(c);
+	                        }
+                    	}
 
-                        if(!g) continue;
-
-                        vector<task> calls = this->problem(*g);
-                        delete g;
-                        //cout << "t " << i << " enfileirando " << calls.size() << " elementos" << endl;
-                        for(task c : calls){
-                            this->enqueue(c);
-                        }
-                        this->busy[i] = false;
+                        {
+                        	unique_lock<mutex> lock(this->mutex_queue);
+                        	this->busyThreads--;
+                    	}
 
                         if(calls.empty()){
                         	//cout << "possivelmente parar " << endl;
                         	std::unique_lock<std::mutex> lock(mutex_queue);
-                            bool flag = false;
-
-                            for (bool b : busy) {
-                                flag = b || flag;
-                            }
-                            if(!flag) {
+                          	//cout << "ocupadas " << this->busyThreads << " tamanho da fila " <<  pq.size() << endl;
+                            if(this->busyThreads==0) {
                                 if(pq.empty()){
                                     this->stop = true;
                                     this->condition.notify_all();

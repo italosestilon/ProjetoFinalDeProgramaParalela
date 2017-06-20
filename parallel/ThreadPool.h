@@ -37,6 +37,7 @@ private:
     mutex mutex_queue;
 
     bool stop = false;
+    int busyThreads = 0;
 
 public:
 
