@@ -25,7 +25,7 @@ void ThreadPool::enqueue(task call) {
         std::unique_lock<std::mutex> lock(mutex_queue);
         //cout << "colocando na fila" << "\n";
         pq.push(make_pair(call.level, call));
-        printf("pq size %d\n", pq.size());
+        //printf("pq size %d\n", pq.size());
     }
 
     this->condition.notify_one();

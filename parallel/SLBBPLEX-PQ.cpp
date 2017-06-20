@@ -24,7 +24,7 @@ int record;
 word mask[INT_SIZE];
 int level;
 clock_t clk;
-int timeout;
+double timeout;
 int nt;
 double elapsed;
 int s = 2;
@@ -339,6 +339,7 @@ void branching(word * U, int W, int bound){
 
 
 void thread_slave(task c){
+	double duracao;
 	int iv, jv;
 	int iu, ju;
 	word R[NWORDS(Vnbr)];
@@ -376,18 +377,18 @@ void thread_slave(task c){
 
 	duracao = ((double) (stop.tv_sec * 1000000 + stop.tv_usec) - (start.tv_sec * 1000000 + start.tv_usec)) / 1000000;
 
+
 	if(duracao >= timeout){
 		printf("TIMEOUT\n");
 		printf("best %d-plex: ", s);
 		for(int i = 0; i < record; i++){
 			printf("%d ", pos[rec[i]] + 1);
 		}
-
 		printf("\n");
 		printf("record          =  %10d\n", record );
 	  	//printf("subp            =  %10lld\n", subp );
 		printf("time            =  %10.5f\n", duracao );
-    exit(0);
+    		exit(0);
 	}
 
 	for(int k = 0; k <= W; k++){
@@ -423,22 +424,22 @@ void thread_slave(task c){
 
 		generate(U, W, c2.level, c2.U, c2.nncnt, c2.set);
 
-    if(level + COUNT(c2.U, c2.W) > record){
-      int seed = chrono::system_clock::now().time_since_epoch().count();
-      default_random_engine generator (seed);
-      uniform_int_distribution<int> distribution(1,10);
-      int dice_roll = distribution(generator);
+		if(level + COUNT(c2.U, c2.W) > record){
+		      	int seed = chrono::system_clock::now().time_since_epoch().count();
+		      	default_random_engine generator (seed);
+		      	uniform_int_distribution<int> distribution(1,10);
+		      	int dice_roll = distribution(generator);
 
-      if(dice_roll >= 8){
-        thread_slave(c2);
-      }else{
-        tp->enqueue(c2);
-      }
-    }else{
-      free(c2.set);
-  		free(c2.U);
-  		free(c2.nncnt);
-    }
+		      	if(dice_roll >= 8){
+				thread_slave(c2);
+		      	}else{
+				tp->enqueue(c2);
+		      	}
+		}else{
+			free(c2.set);
+			free(c2.U);
+			free(c2.nncnt);
+		}
 	}
 
 	free(c.U);
@@ -532,7 +533,7 @@ int main(int argc, char *argv[]){
 
 	timeout = atoi( argv[1] );
 
-	printf("timout %d\n", timeout);
+	printf("timeout %lf\n", timeout);
 
   	nt = atoi( argv[2] );
 
