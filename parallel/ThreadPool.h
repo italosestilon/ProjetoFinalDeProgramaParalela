@@ -29,7 +29,7 @@ using namespace std;
 class ThreadPool {
 
 private:
-    FibonacciHeap< pair< int, task> > pq;
+    stack< pair< int, task> > pq;
     vector<thread> thread_handles;
     condition_variable condition;
     vector<bool> busy;

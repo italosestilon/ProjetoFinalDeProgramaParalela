@@ -8,9 +8,9 @@
 
 bool task::operator< (const task  &c) const {
     if(level == c.level){
-        return (-1)*COUNT(U, W) < (-1)*COUNT(c.U, c.W);
+        return COUNT(U, W) < COUNT(c.U, c.W);
     }
-    return level*(-1) < (-1)*c.level;
+    return level < c.level;
 }
 
 ThreadPool::ThreadPool(int thread_number, function<void (task)> problem) {
@@ -21,11 +21,11 @@ ThreadPool::ThreadPool(int thread_number, function<void (task)> problem) {
 }
 
 void ThreadPool::enqueue(task call) {
-	{
-	    std::unique_lock<std::mutex> lock(mutex_queue);
-	    //cout << "colocando " << call.a << " na fila" << "\n";
-	    pq.push(make_pair(call.level, call));
-	}
+    {
+        std::unique_lock<std::mutex> lock(mutex_queue);
+        //cout << "colocando " << call.a << " na fila" << "\n";
+        pq.push(make_pair(call.level, call));
+    }
 
     this->condition.notify_one();
 }
@@ -35,16 +35,16 @@ task* ThreadPool::getTask() {
     //cout << "tentando tirar da fila "  <<  " " <<  endl;
     //cout << "tamanho da fila " << pq.size() << endl;
     {
-    	std::unique_lock<std::mutex> lock(mutex_queue);
-	    if(!pq.empty()) {
-	        pair<int, task> p = pq.top();
-	        pq.pop();
-	        *c = p.second;
-	    }else{
-	        delete c;
-	        c = nullptr;
-	    }
-	}
+        std::unique_lock<std::mutex> lock(mutex_queue);
+        if(!pq.empty()) {
+            pair<int, task> p = pq.top();
+            pq.pop();
+            *c = p.second;
+        }else{
+            delete c;
+            c = nullptr;
+        }
+    }
   
     return c;
 }
@@ -65,22 +65,47 @@ void ThreadPool::run() {
                         {
                             unique_lock<mutex> lock(this->mutex_queue);
                             //cout << "thread " << i << " ficando ocupada" << endl;
-            
-                            if (this->pq.empty()){
-                            	cout << "thread " << i << " parando" << endl;
+                            this->condition.wait(lock,
+                                                 [this, i] { 
+                                                    //cout << "avaliando a thread " << i << endl;
+                                                    return this->stop || !this->pq.empty(); });
+                            if (this->stop && this->pq.empty()){
+                                cout << "thread " << i << " parando" << endl;
                                 return;
                             }
-
                
+                        }
+
+                        {
+                            unique_lock<mutex> lock(this->mutex_queue);
+                            this->busyThreads++;
                         }
 
                         g = this->getTask();
                         
                         if(g){
-	                        this->problem(*g);
-	                        delete g;
-	                        //cout << "t " << i << " enfileirando " << calls.size() << " elementos" << endl;
-                    	}                        
+                            calls = this->problem(*g);
+                            delete g;
+                            //cout << "t " << i << " enfileirando " << calls.size() << " elementos" << endl;
+                        }
+
+                        {
+                            unique_lock<mutex> lock(this->mutex_queue);
+                            this->busyThreads--;
+                        }
+
+                        if(pq.empty()){
+                            //cout << "possivelmente parar " << endl;
+                            std::unique_lock<std::mutex> lock(mutex_queue);
+                            //cout << "ocupadas " << this->busyThreads << " tamanho da fila " <<  pq.size() << endl;
+                            if(this->busyThreads==0) {
+                                
+                                this->stop = true;
+                                this->condition.notify_all();
+                                
+                            }
+
+                        }
                     }
                 })
           );
@@ -88,8 +113,7 @@ void ThreadPool::run() {
 }
 
 ThreadPool::~ThreadPool() {
-    this->condition.notify_all();
-    cout << "tentando parar as threads" << endl;
+    
     for(std::thread &worker: thread_handles){
         worker.join();
     }
