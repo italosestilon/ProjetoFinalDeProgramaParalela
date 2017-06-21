@@ -23,7 +23,7 @@ int record;
 word mask[INT_SIZE];
 int level;
 clock_t clk;
-int timeout;
+double timeout;
 int nt;
 double elapsed;
 int s = 2;
@@ -337,6 +337,8 @@ void branching(word * U, int W, int bound){
 
 
 vector<task> thread_slave(task c){
+	double duracao;
+	struct timeval stop;
 	vector<task> tasks;
 	int iv, jv;
 	int iu, ju;
@@ -371,11 +373,12 @@ vector<task> thread_slave(task c){
 	}
 	
 
-	/*gettimeofday(&stop, NULL);
+	gettimeofday(&stop, NULL);
 
 	duracao = ((double) (stop.tv_sec * 1000000 + stop.tv_usec) - (start.tv_sec * 1000000 + start.tv_usec)) / 1000000;
 
 	if(duracao >= timeout){
+		pthread_mutex_lock(&mutex_update_solution);
 		printf("TIMEOUT\n");
 		printf("best %d-plex: ", s);
 		for(int i = 0; i < record; i++){
@@ -386,8 +389,9 @@ vector<task> thread_slave(task c){
 		printf("record          =  %10d\n", record );
 	  	//printf("subp            =  %10lld\n", subp );
 		printf("time            =  %10.5f\n", duracao );
-		//tp.~ThreadPool();
-	}*/
+		exit(0);
+		pthread_mutex_unlock(&mutex_update_solution);
+	}
 
 	for(int k = 0; k <= W; k++){
 		R[k] = U[k];
@@ -482,7 +486,7 @@ int main(int argc, char *argv[]){
 
 	timeout = atoi( argv[1] );
 
-	printf("timout %d\n", timeout);
+	printf("timeout %lf\n", timeout);
 
   	nt = atoi( argv[2] );
 
