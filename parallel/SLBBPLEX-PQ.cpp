@@ -428,16 +428,20 @@ void thread_slave(task c){
 		generate(U, W, c2.level, c2.U, c2.nncnt, c2.set);
 
 		if(level + COUNT(c2.U, c2.W) > record){
-		      	int seed = chrono::system_clock::now().time_since_epoch().count();
-		      	default_random_engine generator (seed);
-		      	uniform_int_distribution<int> distribution(1,10);
-		      	int dice_roll = distribution(generator);
+			if(tp->nBusy() > 0){
+			      	int seed = chrono::system_clock::now().time_since_epoch().count();
+			      	default_random_engine generator (seed);
+			      	uniform_int_distribution<int> distribution(1,10);
+			      	int dice_roll = distribution(generator);
 
-		      	if(dice_roll >= 8){
+			      	if(dice_roll >= 2){
+					thread_slave(c2);
+			      	}else{
+					tp->enqueue(c2);
+			      	}
+			}else{
 				thread_slave(c2);
-		      	}else{
-				tp->enqueue(c2);
-		      	}
+			}
 		}else{
 			free(c2.set);
 			free(c2.U);
@@ -451,7 +455,7 @@ void thread_slave(task c){
 }
 
 void thread_master(){
-  tp = new ThreadPool(nt, thread_slave);
+  	tp = new ThreadPool(nt, thread_slave);
 	task c;
 	c.U = (word*)malloc(sizeof(word)*NWORDS(Vnbr));
 	c.nncnt = (int*)malloc(sizeof(int)*Vnbr);
