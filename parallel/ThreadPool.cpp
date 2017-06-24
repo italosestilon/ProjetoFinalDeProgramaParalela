@@ -73,39 +73,42 @@ void ThreadPool::run() {
                             	cout << "thread " << i << " parando" << endl;
                                 return;
                             }
-
-               
                         }
 
                         {
+                            //cout << "thread " << i << " ficando ocupada \n" ;
                         	unique_lock<mutex> lock(this->mutex_queue);
                         	this->busyThreads++;
                         }
 
                         g = this->getTask();
                         vector<task> calls;
+
                         if(g){
 	                        calls = this->problem(*g);
 	                        delete g;
 	                        //cout << "t " << i << " enfileirando " << calls.size() << " elementos" << endl;
 	                        for(task c : calls){
-	                            this->enqueue(c);
+	                           this->enqueue(c);
 	                        }
                     	}
 
                         {
                         	unique_lock<mutex> lock(this->mutex_queue);
+                            //cout << "thread " << i << " ficando desocupada\n" ;
                         	this->busyThreads--;
                     	}
 
-                        if(calls.empty()){
+                        {
                         	//cout << "possivelmente parar " << endl;
                         	std::unique_lock<std::mutex> lock(mutex_queue);
-                          	//cout << "ocupadas " << this->busyThreads << " tamanho da fila " <<  pq.size() << endl;
+                          	cout << "ocupadas " << this->busyThreads << " tamanho da fila " <<  pq.size() << endl;
                             if(this->busyThreads==0) {
                                 if(pq.empty()){
                                     this->stop = true;
                                     this->condition.notify_all();
+                                }else{
+                                    this->condition.notify_one();
                                 }
                             }
 
