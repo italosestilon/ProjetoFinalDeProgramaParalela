@@ -371,14 +371,14 @@ vector<task> thread_slave(task c){
 	if(duracao >= timeout){
 		pthread_mutex_lock(&mutex_update_solution);
 		printf("TIMEOUT\n");
-		/*printf("best %d-plex: ", s);
+		printf("best %d-plex: ", s);
 		for(int i = 0; i < record; i++){
 			printf("%d ", pos[rec[i]] + 1);
-		}*/
+		}
 
 		printf("record          =  %10d\n", record );
 	  	//printf("subp            =  %10lld\n", subp );
-		printf("time            = %10.5f\n\n\n", duracao );
+		printf("%.5f", duracao );
 		exit(0);
 		pthread_mutex_unlock(&mutex_update_solution);
 	}
@@ -533,8 +533,8 @@ int main(int argc, char *argv[]){
 		printf("%d ", pos[rec[i]] + 1);
 	}*/
 
-  	printf("record          =  %10d\n", record );
-  	printf("time            =  %10.5lf\n\n\n", duracao );
+  	//printf("record          =  %10d\n", record );
+  	printf("%10.5lf", duracao);
 
 	return 0;
 }

@@ -379,7 +379,7 @@ void thread_slave(task c){
 		
 		printf("record          =  %10d\n", record );
 		//printf("subp            =  %10lld\n", subp );
-		printf("time            =  %10.5f\n\n\n", duracao );
+		printf("%.5f", duracao );
 	    	exit(0);
 		pthread_mutex_lock(&mutex_update_solution);
 	}
@@ -573,8 +573,8 @@ int main(int argc, char *argv[]){
 		printf("%d ", pos[rec[i]] + 1);
 	}*/
 
-  	printf("record          =  %10d\n", record );
-  	printf("time            =  %10.5lf\n\n\n", duracao );
+  	//printf("record          =  %10d\n", record );
+  	printf("%10.5lf", duracao);
 
 	return 0;
 }
