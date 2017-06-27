@@ -1,5 +1,5 @@
 #!/bin/bash
-time_out=3600
+time_out=1
 for file in input/*.clq; do
 	printf "$file \n"
 	for k in 2 3; do
