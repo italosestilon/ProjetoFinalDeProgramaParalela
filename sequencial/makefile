@@ -1,0 +1,3 @@
+SLBBPLEX: SLBBPLEX.cpp 
+	g++ -O3 -g -pg SLBBPLEX.cpp -o SLBBPLEX
+
