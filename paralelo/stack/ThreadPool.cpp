@@ -10,7 +10,6 @@ bool task::operator< (const task  &c) const {
 }
 
 ThreadPool::ThreadPool(int thread_number, function<vector<task>(task)> problem) {
-    //cout << "fila esta " << pq.empty() << endl;
     this->stop = false;
     this->threadNumber = thread_number;
     this->problem = problem;
@@ -19,7 +18,6 @@ ThreadPool::ThreadPool(int thread_number, function<vector<task>(task)> problem) 
 void ThreadPool::enqueue(task call) {
 	{
 	    std::unique_lock<std::mutex> lock(mutex_queue);
-	    //cout << "colocando " << call.a << " na fila" << "\n";
 	    pq.push(make_pair(call.level, call));
 	}
 
@@ -28,8 +26,6 @@ void ThreadPool::enqueue(task call) {
 
 task* ThreadPool::getTask() {
     task *c = new task;
-    //cout << "tentando tirar da fila "  <<  " " <<  endl;
-    //cout << "tamanho da fila " << pq.size() << endl;
     {
     	std::unique_lock<std::mutex> lock(mutex_queue);
 	    if(!pq.empty()) {
@@ -50,52 +46,47 @@ void ThreadPool::run() {
     for(int i = 0; i < this->threadNumber; i++){
         busy.push_back(true);
         thread_handles.push_back(thread(
-                [this, i]
+            [this, i]
+            {
+                for(;;)
                 {
-                    //cout << "criando thread " << i << endl;
-                    for(;;)
+                    this->busy[i] = false;
+                    task* g = nullptr;
                     {
-                        //cout << "thread " << i << " ficando desocupada" << endl;
-                        this->busy[i] = false;
-                        task* g = nullptr;
-                        {
-                            unique_lock<mutex> lock(this->mutex_queue);
-                            //cout << "thread " << i << " ficando ocupada" << endl;
-                            this->condition.wait(lock,
-                                                 [this, i] { 
-                                                    //cout << "avaliando a thread " << i << endl;
-                                                    return this->stop || !this->pq.empty(); });
-                            if (this->stop && this->pq.empty()){
-                            	//cout << "thread " << i << " parando" << endl;
-                                return;
-                            }
-		
-			    this->busyThreads++;
-               
+                        unique_lock<mutex> lock(this->mutex_queue);
+                        this->condition.wait(lock,
+                            [this, i] { 
+                                return this->stop || !this->pq.empty(); 
+                            });
+                        if (this->stop && this->pq.empty()){
+                            return;
                         }
 
-                        g = this->getTask();
-                        vector<task> calls;
-                        if(g){
-	                     calls = this->problem(*g);
-	                     delete g;
-	                     //cout << "t " << i << " enfileirando " << calls.size() << " elementos" << endl;
-	                     for(task c : calls){
-	                         this->enqueue(c);
-	                     }
-                    	}
-
-                        {
-	                	std::unique_lock<std::mutex> lock(mutex_queue);
-				this->busyThreads--;
-	                   	if(this->busyThreads==0 && pq.empty()) {
-	                            	this->stop = true;
-	                            	this->condition.notify_all();
-	                    	}
-			}
+    	                this->busyThreads++;
+           
                     }
-                })
-          );
+
+                    g = this->getTask();
+                    vector<task> calls;
+                    if(g){
+                        calls = this->problem(*g);
+                        delete g;
+                        for(task c : calls){
+                            this->enqueue(c);
+                        }
+                	}
+
+                    {
+                    	std::unique_lock<std::mutex> lock(mutex_queue);
+    			        this->busyThreads--;
+                       	if(this->busyThreads==0 && pq.empty()) {
+                        	this->stop = true;
+                        	this->condition.notify_all();
+                        }
+    	            }
+                }
+            })
+        );
     }
 }
 

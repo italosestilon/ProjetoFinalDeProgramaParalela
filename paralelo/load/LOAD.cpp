@@ -372,12 +372,14 @@ void thread_slave(task c){
 	if(duracao >= timeout){
 		pthread_mutex_lock(&mutex_update_solution);
 		printf("TIMEOUT\n");
+
+
 		printf("best %d-plex: ", s);
 		for(int i = 0; i < record; i++){
 			printf("%d ", pos[rec[i]] + 1);
 		}
 		
-		printf("record          =  %10d\n", record );
+		printf("\nrecord          =  %10d\n", record );
 		//printf("subp            =  %10lld\n", subp );
 		printf("%.5f", duracao );
 	    	exit(0);
@@ -574,6 +576,7 @@ int main(int argc, char *argv[]){
 	}
 
   	printf("record          =  %10d\n", record );
+
   	printf("%10.5lf", duracao);
 
 	return 0;

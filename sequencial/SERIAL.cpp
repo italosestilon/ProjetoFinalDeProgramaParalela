@@ -472,6 +472,7 @@ int main(int argc, char *argv[]){
 
   	printf("record          =  %10d\n", record );
   	printf("subp            =  %10lld\n", subp );
+
   	printf("%10.5f", elapsed );
 
 	return 0;

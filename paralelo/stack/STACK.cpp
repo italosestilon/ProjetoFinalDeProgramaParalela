@@ -527,13 +527,14 @@ int main(int argc, char *argv[]){
 	gettimeofday(&stop, NULL);
 
 	duracao = ((double) (stop.tv_sec * 1000000 + stop.tv_usec) - (start.tv_sec * 1000000 + start.tv_usec)) / 1000000;
-
+	
 	printf("best %d-plex: ", s);
 	for(int i = 0; i < record; i++){
 		printf("%d ", pos[rec[i]] + 1);
 	}
 
-  	printf("record          =  %10d\n", record );
+  	printf("\nrecord          =  %10d\n", record );
+
   	printf("%10.5lf", duracao);
 
 	return 0;

@@ -76,11 +76,9 @@ void ThreadPool::run() {
 		                if(pq.empty()){
 
 		                    if(this->busyThreads==0) {
-
 						        this->stop = true;
 						       	this->condition.notify_all();
 		                    }
-
 		                }
 					}
                 }

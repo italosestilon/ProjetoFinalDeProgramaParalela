@@ -5,9 +5,11 @@ for file in input/*.clq; do
 	for k in 2 3; do
 	
 		printf "\nk = $k \n"
+
 		saida_serial=$(./SERIAL $time_out $k $file)
 		tempo_serial=$(echo "$saida_serial" | tail -n 1)
 		echo "$saida_serial" > $file-serial.out
+
 		printf "\n"
 		printf "Threads\tLoad\tStack\t\n"
 		for nt in 2 4 8 16; do
